@@ -5,20 +5,24 @@ using UnityEngine.UI;
 
 public class MathBlock : MonoBehaviour
 {
-	public GameObject textObject;
+	public Container container;
 	public int value { get; private set; }
 	public bool isSelected;
+
 	private Text textFormula;
+	private SpriteRenderer spriteRenderer;
 	private Transform self;
 
 	void Awake()
 	{
 		this.value = 0;
 		this.isSelected = false;
-		GameObject go = Instantiate(textObject, transform.position, Quaternion.identity, GameObject.Find("Canvas").transform);
+
+		this.self = transform;
+		GameObject go = Instantiate(ResourceManager.instance.textPrefab, transform.position, Quaternion.identity, ResourceManager.instance.canvasObject.transform);
 		go.name = $"text-{gameObject.name}";
 		this.textFormula = go.GetComponent<Text>();
-		this.self = transform;
+		this.spriteRenderer = GetComponent<SpriteRenderer>();
 	}
 
 	// Update is called once per frame
@@ -27,8 +31,25 @@ public class MathBlock : MonoBehaviour
 		
 	}
 
+	public void select()
+	{
+		this.isSelected = !this.isSelected;
+		this.refresh();
+		this.container.onSelect(this);
+	}
+
+	private void refresh()
+	{
+		if(this.isSelected)
+			this.spriteRenderer.color = Color.red;
+		else
+			this.spriteRenderer.color = Color.white;
+	}
+
 	public void calculate(int v)
 	{
+		this.isSelected = false;
+		this.refresh();
 		this.value = v;
 
 		int n; // temparary value for formula
