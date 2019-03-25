@@ -6,25 +6,34 @@ using UnityEngine.UI;
 public class Container : MonoBehaviour
 {
 	public int teamNumber;
+	public ContainerSetting setting;
+	public int row { get { return setting.row; } }
+	public int col { get { return setting.col; } }
+	public float rowSize { get { return setting.rowSize; } }
+	public float colSize { get { return setting.colSize; } }
+	public float forceScale { get { return setting.forceScale; } }
+
+	// game objects
+	public Text textScore;
 	public GameObject blockGroup;
-	public int row;
-	public int col;
-	public float rowSize;
-	public float colSize;
 
 	// temperary variable for test
 	public int score = 0;
+
+	private Vector2 force;
 
 	private Transform self;
 	private GameObject block;
 	private GameObject[,] blockGrid;
 
 	private MathBlock selectedBlock;
+	private CameraShake cameraShake;
 
 	// Use this for initialization
 	void Start()
 	{
 		GameManager.instance.registerTeam(this.teamNumber, this);
+		this.cameraShake = FindObjectOfType<CameraShake>();
 
 		// initialize cache
 		this.self = transform;
@@ -46,7 +55,7 @@ public class Container : MonoBehaviour
 				// initialize
 				MathBlock mb =  temp.GetComponent<MathBlock>();
 				mb.container = this;
-				mb.calculate(Random.Range(1, 25));
+				mb.calculate(this.getBlockRandomValue());
 
 				this.blockGrid[i, j] = temp;
 
@@ -83,17 +92,23 @@ public class Container : MonoBehaviour
 		{
 			Debug.Log("Correct!");
 
+			// effect
+			this.force.x = Random.Range(-1f, 1f);
+			this.force.y = Random.Range(-1f, 1f);
+			this.force = this.force.normalized * this.forceScale;
+			cameraShake.rb2d.velocity += this.force;
+
 			// attack opponent
 			Container opponent = GameManager.instance.queryTeam(1 - this.teamNumber);
 			opponent.onAttacked();
 
 			// add score
 			this.score++;
-			Debug.Log($"Team [{this.teamNumber}]: {this.score}");
+			this.textScore.text = $"Score: {this.score}";
 
 			// re-generate blocks
-			this.selectedBlock.calculate(Random.Range(1, 25));
-			mb.calculate(Random.Range(1, 25));
+			this.selectedBlock.calculate(this.getBlockRandomValue());
+			mb.calculate(this.getBlockRandomValue());
 			this.selectedBlock = null;
 		}
 		// wrong selection
@@ -112,7 +127,7 @@ public class Container : MonoBehaviour
 	{
 		// choose two blocks to re-generate value
 		MathBlock mb = this.blockGrid[Random.Range(0, this.row), Random.Range(0, this.col)].GetComponent<MathBlock>();
-		mb.calculate(Random.Range(1, 25));
+		mb.calculate(this.getBlockRandomValue());
 		Debug.Log($"attacked: {mb.name}");
 
 		// second one
@@ -121,7 +136,12 @@ public class Container : MonoBehaviour
 		{
 			mb2 = this.blockGrid[Random.Range(0, this.row), Random.Range(0, this.col)].GetComponent<MathBlock>();
 		} while (mb == mb2);
-		mb2.calculate(Random.Range(1, 25));
+		mb2.calculate(this.getBlockRandomValue());
 		Debug.Log($"attacked: {mb2.name}");
+	}
+
+	private int getBlockRandomValue()
+	{
+		return Random.Range(1, 13);
 	}
 }

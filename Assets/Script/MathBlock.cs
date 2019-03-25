@@ -19,9 +19,13 @@ public class MathBlock : MonoBehaviour
 		this.isSelected = false;
 
 		this.self = transform;
-		GameObject go = Instantiate(ResourceManager.instance.textPrefab, transform.position, Quaternion.identity, ResourceManager.instance.canvasObject.transform);
+		
+		// setup text
+		GameObject go = Instantiate(ResourceManager.instance.textPrefab, RectTransformUtility.WorldToScreenPoint(Camera.main, transform.position), Quaternion.identity, ResourceManager.instance.canvasObject.transform);
 		go.name = $"text-{gameObject.name}";
+		go.GetComponent<MathText>().targetBlock = this.self;
 		this.textFormula = go.GetComponent<Text>();
+
 		this.spriteRenderer = GetComponent<SpriteRenderer>();
 	}
 
