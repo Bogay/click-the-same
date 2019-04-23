@@ -26,8 +26,9 @@ public class ResourceManager : MonoBehaviour
 		}
 	}
 
-	public GameObject textPrefab { get; private set; }
-	public GameObject mathBlockPrefab { get; private set; }
+	public GameObject textPrefab;
+	public GameObject mathBlockPrefab;
+	public GameObject bulletPrefab;
 	public GameObject canvasObject
 	{
 		get
@@ -57,8 +58,9 @@ public class ResourceManager : MonoBehaviour
 		_instance = this;
 
 		// preload
-		this.textPrefab = Resources.Load<GameObject>("Text");
-		this.mathBlockPrefab = Resources.Load<GameObject>("Block");
+		// this.textPrefab = Resources.Load<GameObject>("Text Root");
+		// this.mathBlockPrefab = Resources.Load<GameObject>("Block");
+		// this.bulletPrefab = Resources.Load<GameObject>("Bullet");
 
 		DontDestroyOnLoad(this);
 	}
