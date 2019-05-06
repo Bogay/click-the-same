@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public class Container : MonoBehaviour
 {
@@ -12,9 +13,10 @@ public class Container : MonoBehaviour
 	public float rowSize { get { return setting.rowSize; } }
 	public float colSize { get { return setting.colSize; } }
 	public float forceScale { get { return setting.forceScale; } }
+	public float attackDuration { get { return setting.attackDuration; } }
 
 	// game objects
-	public Text textScore;
+	public TextScore textScore;
 	public GameObject blockGroup;
 
 	// temperary variable for test
@@ -24,7 +26,8 @@ public class Container : MonoBehaviour
 
 	private Transform self;
 	private GameObject block;
-	private GameObject[,] blockGrid;
+	private MathBlock[,] blockGrid;
+	private Transform[,] blockTransform;
 
 	private MathBlock selectedBlock;
 	private CameraShake cameraShake;
@@ -40,7 +43,8 @@ public class Container : MonoBehaviour
 		this.block = ResourceManager.instance.mathBlockPrefab;
 
 		this.selectedBlock = null;
-		this.blockGrid = new GameObject[this.row, this.col];
+		this.blockGrid = new MathBlock[this.row, this.col];
+		this.blockTransform = new Transform[this.row, this.col];
 
 		Vector3 curr = transform.position;
 		GameObject temp;
@@ -57,19 +61,14 @@ public class Container : MonoBehaviour
 				mb.container = this;
 				mb.calculate(this.getBlockRandomValue());
 
-				this.blockGrid[i, j] = temp;
+				this.blockGrid[i, j] = mb;
+				this.blockTransform[i, j] = temp.transform;
 
 				curr.x += this.colSize;
 			}
 			curr.x = self.position.x;
 			curr.y -= this.rowSize;
 		}
-	}
-
-	// Update is called once per frame
-	void Update()
-	{
-
 	}
 
 	public void onSelect(MathBlock mb)
@@ -92,19 +91,44 @@ public class Container : MonoBehaviour
 		{
 			Debug.Log("Correct!");
 
-			// effect
-			this.force.x = Random.Range(-1f, 1f);
-			this.force.y = Random.Range(-1f, 1f);
-			this.force = this.force.normalized * this.forceScale;
-			cameraShake.rb2d.velocity += this.force;
-
 			// attack opponent
 			Container opponent = GameManager.instance.queryTeam(1 - this.teamNumber);
-			opponent.onAttacked();
+			System.Tuple<MathBlock, MathBlock> targets = opponent.getTargets();
 
-			// add score
-			this.score++;
-			this.textScore.text = $"Score: {this.score}";
+			GameObject temp;
+
+			// attack first block
+			temp = Instantiate(ResourceManager.instance.bulletPrefab, this.selectedBlock.self.position, Quaternion.identity);
+			temp.transform
+			.DOMove(targets.Item1.self.position, this.attackDuration)
+			.OnComplete( () =>
+				{
+					targets.Item1.calculate(this.getBlockRandomValue());
+					targets.Item1.anim.SetBool(MathBlock.IS_AIMED, false);
+
+					// camera shake
+					cameraShake.addForce(Util.unitVec2() * this.forceScale);
+
+					// add score
+					this.score++;
+					this.textScore.addScore();
+					this.textScore.setText($"Score: {this.score}");
+
+					// play audio
+					
+				}
+			);
+
+			// attack second one
+			temp = Instantiate(ResourceManager.instance.bulletPrefab, mb.self.position, Quaternion.identity);
+			temp.transform
+			.DOMove(targets.Item2.self.position, this.attackDuration)
+			.OnComplete( () =>
+				{
+					targets.Item2.calculate(this.getBlockRandomValue());
+					targets.Item2.anim.SetBool(MathBlock.IS_AIMED, false);
+				}
+			);
 
 			// re-generate blocks
 			this.selectedBlock.calculate(this.getBlockRandomValue());
@@ -123,21 +147,44 @@ public class Container : MonoBehaviour
 		}
 	}
 
-	public void onAttacked()
+	public System.Tuple<MathBlock, MathBlock> getTargets()
 	{
 		// choose two blocks to re-generate value
-		MathBlock mb = this.blockGrid[Random.Range(0, this.row), Random.Range(0, this.col)].GetComponent<MathBlock>();
-		mb.calculate(this.getBlockRandomValue());
+		MathBlock mb, mb2;
+		do
+		{
+			mb = this.blockGrid[Random.Range(0, this.row), Random.Range(0, this.col)];
+		}while(mb.isSelected);
+
+		mb.anim.SetBool(MathBlock.IS_AIMED, true);
 		Debug.Log($"attacked: {mb.name}");
 
 		// second one
-		MathBlock mb2;
 		do
 		{
-			mb2 = this.blockGrid[Random.Range(0, this.row), Random.Range(0, this.col)].GetComponent<MathBlock>();
-		} while (mb == mb2);
-		mb2.calculate(this.getBlockRandomValue());
+			mb2 = this.blockGrid[Random.Range(0, this.row), Random.Range(0, this.col)];
+		} while (mb2.isSelected || mb == mb2);
+		
+		mb2.anim.SetBool(MathBlock.IS_AIMED, true);
 		Debug.Log($"attacked: {mb2.name}");
+
+		return System.Tuple.Create(mb, mb2);
+	}
+
+	public Vector3 queryBlockPosition(int r, int c)
+	{
+		if(r < 0 || r >= this.row || c < 0 || c >= this.col) return Vector3.zero;
+
+		Debug.Log(this.blockTransform[r, c].position);
+
+		return this.blockTransform[r, c].position;
+	}
+
+	public void selectBlock(int r, int c)
+	{
+		if(r < 0 || r >= this.row || c < 0 || c >= this.col) return;
+
+		this.blockGrid[r, c].select();
 	}
 
 	private int getBlockRandomValue()

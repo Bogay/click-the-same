@@ -9,12 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ba68e1bf463caf14b8f30c92dff43c8d, type: 3}
-  m_Name: ContainerSetting
+  m_Script: {fileID: 11500000, guid: fe240bff1685fd046ad9639f661f9f2b, type: 3}
+  m_Name: RightPointerSetting
   m_EditorClassIdentifier: 
-  row: 6
-  col: 3
-  rowSize: 1
-  colSize: 1.7
-  forceScale: 15
-  attackDuration: 0.5
+  fireKey: 305
+  upKey: 273
+  downKey: 274
+  leftKey: 276
+  rightKey: 275
+  cooldown: 0.2
+  offset: {x: 0.7, y: -0.4}

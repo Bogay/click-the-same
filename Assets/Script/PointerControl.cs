@@ -6,68 +6,78 @@ using UnityEngine;
 public class PointerControl : MonoBehaviour
 {
 	public int teamNumber;
+	public PointerSetting setting;
 
-	[Header("Keys")]
-	public KeyCode fireKey;
-	public KeyCode upKey;
-	public KeyCode downKey;
-	public KeyCode leftKey;
-	public KeyCode rightKey;
+	private KeyCode fireKey { get { return this.setting.fireKey; } }
+	private KeyCode upKey { get { return this.setting.upKey; } }
+	private KeyCode downKey { get { return this.setting.downKey; } }
+	private KeyCode leftKey { get { return this.setting.leftKey; } }
+	private KeyCode rightKey { get { return this.setting.rightKey; } }
 
-	[Header("Move")]
-	public float stepX;
-	public float stepY;
-	public float cooldown;
-	public float speed;
+	private float cooldown { get { return this.setting.cooldown; } }
+	private Vector2 offset { get { return this.setting.offset; } }
 
-	// click parameter
-	public Vector2 offset;
-	public float radius;
+	private int row;
+	private int col;
 
-	public Vector2 initOffset;
-
+	private Vector3 target;
 	private Transform self;
 	private Rigidbody2D rb2d;
-	private Vector2 speedV;
+	private Container container;
 
 	// Use this for initialization
 	private void Start()
 	{
 		this.self = transform;
 		this.rb2d = GetComponent<Rigidbody2D>();
-		transform.position = GameManager.instance.queryTeam(this.teamNumber).transform.position + (Vector3)this.initOffset;
 
-		StartCoroutine("cmove");
+		this.container = GameManager.instance.queryTeam(this.teamNumber);
+		this.row = this.col = 0;
+
+		this.self.position = this.container.queryBlockPosition(0, 0) + (Vector3)this.offset;
+		this.target = this.self.position;
+
+		StartCoroutine(this.cmove());
 	}
 
 	private void Update()
 	{
+		this.self.position = Vector3.Lerp(this.self.position, this.target, 20 * Time.deltaTime);
 		this.click();
-	}
-
-	private void FixedUpdate()
-	{
-		// this.move();
 	}
 
 	private IEnumerator cmove()
 	{
 		while(true)
 		{
-			this.speedV = Vector2.zero;
+			int moved = 0;
 
 			// vertical
-			if(Input.GetKey(this.upKey)) this.speedV = Vector2.up;
-			else if(Input.GetKey(this.downKey)) this.speedV = Vector2.down;
-			// horizontal
-			else if(Input.GetKey(this.leftKey)) this.speedV = Vector2.left;
-			else if(Input.GetKey(this.rightKey)) this.speedV = Vector2.right;
-
-			if(this.speedV != Vector2.zero)
+			if(Input.GetKey(this.upKey) && this.row > 0)
 			{
-				this.speedV.x *= this.stepX;
-				this.speedV.y *= this.stepY;
-				this.self.Translate(this.speedV);
+				this.row--; 
+				moved = 1;
+			}
+			else if(Input.GetKey(this.downKey) && this.row < this.container.row - 1)
+			{
+				this.row++;
+				moved = 1;
+			}
+			// horizontal
+			else if(Input.GetKey(this.leftKey) && this.col > 0)
+			{
+				this.col--; 
+				moved = 1;
+			}
+			else if(Input.GetKey(this.rightKey) && this.col < this.container.col - 1)
+			{
+				this.col++; 
+				moved = 1;
+			}
+
+			if(moved != 0)
+			{
+				this.target = this.container.queryBlockPosition(this.row, this.col) + (Vector3)this.offset;
 				yield return new WaitForSeconds(this.cooldown);
 			}
 			else
@@ -77,45 +87,9 @@ public class PointerControl : MonoBehaviour
 		}
 	}
 
-	// // for debug
-	// private void OnDrawGizmos()
-	// {
-	// 	Gizmos.color = Color.green;
-	// 	Gizmos.DrawSphere((Vector2)transform.position + this.offset, this.radius);
-	// }
-
 	public void click()
 	{
 		if(!Input.GetKeyDown(this.fireKey)) return;
-
-		Collider2D hit = Physics2D.OverlapCircle((Vector2) this.self.position + this.offset, this.radius);
-		if(!hit)
-		{
-			Debug.Log("miss!");
-			return;
-		}
-
-		MathBlock target = hit.GetComponent<MathBlock>();
-		if(!target) return;
-
-		target.select();
-	}
-
-	public void move()
-	{
-		// move
-		this.speedV = Vector2.zero;
-
-		// vertical
-		if(Input.GetKey(this.upKey)) this.speedV += Vector2.up;
-		else if(Input.GetKey(this.downKey)) this.speedV += Vector2.down;
-
-		// horizontal
-		if(Input.GetKey(this.leftKey)) this.speedV += Vector2.left;
-		else if(Input.GetKey(this.rightKey)) this.speedV += Vector2.right;
-
-		this.speedV *= this.speed;
-		rb2d.velocity = this.speedV;
-
+		this.container.selectBlock(this.row, this.col);
 	}
 }
