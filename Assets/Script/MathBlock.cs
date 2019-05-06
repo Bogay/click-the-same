@@ -59,7 +59,7 @@ public class MathBlock : MonoBehaviour
 	public void calculate(int v)
 	{
 		this.anim.SetBool(MathBlock.IS_SELECTED, false);
-		this.refresh();
+		// this.refresh();
 		this.value = v;
 
 		int n; // temparary value for formula

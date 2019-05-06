@@ -95,16 +95,16 @@ public class Container : MonoBehaviour
 			Container opponent = GameManager.instance.queryTeam(1 - this.teamNumber);
 			System.Tuple<MathBlock, MathBlock> targets = opponent.getTargets();
 
-			GameObject temp;
 
 			// attack first block
-			temp = Instantiate(ResourceManager.instance.bulletPrefab, this.selectedBlock.self.position, Quaternion.identity);
-			temp.transform
+			GameObject bullet1 = Instantiate(ResourceManager.instance.bulletPrefab, this.selectedBlock.self.position, Quaternion.identity);
+			bullet1.transform
 			.DOMove(targets.Item1.self.position, this.attackDuration)
 			.OnComplete( () =>
 				{
 					targets.Item1.calculate(this.getBlockRandomValue());
 					targets.Item1.anim.SetBool(MathBlock.IS_AIMED, false);
+					Destroy(bullet1);
 
 					// camera shake
 					cameraShake.addForce(Util.unitVec2() * this.forceScale);
@@ -120,13 +120,14 @@ public class Container : MonoBehaviour
 			);
 
 			// attack second one
-			temp = Instantiate(ResourceManager.instance.bulletPrefab, mb.self.position, Quaternion.identity);
-			temp.transform
+			GameObject bullet2 = Instantiate(ResourceManager.instance.bulletPrefab, mb.self.position, Quaternion.identity);
+			bullet2.transform
 			.DOMove(targets.Item2.self.position, this.attackDuration)
 			.OnComplete( () =>
 				{
 					targets.Item2.calculate(this.getBlockRandomValue());
 					targets.Item2.anim.SetBool(MathBlock.IS_AIMED, false);
+					Destroy(bullet2);
 				}
 			);
 
