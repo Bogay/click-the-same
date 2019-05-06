@@ -71,6 +71,8 @@ public class GameManager : MonoBehaviour
 				break;
 			case "Main":
 				// set BGM
+				AudioManager.instance.bgmSource.volume = 1;
+
 				AudioManager.instance.setBGM(this.bgm);
 				AudioManager.instance.playBGM();
 				break;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using DG.Tweening;
 
 [RequireComponent(typeof(Text))]
 public class TextTiming : MonoBehaviour
@@ -25,10 +26,17 @@ public class TextTiming : MonoBehaviour
     {
         while(this.remainTime > 0)
         {
+            // final count down
             if(this.remainTime <= 10)
             {
                 this.timingText.color = Color.red;
                 AudioManager.instance.playSE(this.alarmSound);
+            }
+
+            // bgm fade out
+            if(this.remainTime == 3)
+            {
+                AudioManager.instance.bgmSource.DOFade(0, 3f);
             }
 
             this.timingText.text = $"{ this.remainTime, 02 }";
