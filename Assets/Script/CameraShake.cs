@@ -1,51 +1,82 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 public class CameraShake : MonoBehaviour
 {
 	public float forceScale;
+	public float speed;
+	public float radius;
+	public float eps;
 	public Rigidbody2D rb2d { get; private set; }
 
 	private Vector3 origin;
-	private Vector3 last;
-	private Vector3 next;
+	private Vector3 current;
+	private Vector3 target;
 	private Transform self;
-
-	private List<Vector2> forceList;
-
-	private void Awake()
-	{
-		this.forceList = new List<Vector2>();
-	}
 
 	void Start()
 	{
 		this.self = transform;
-		this.last = this.self.position;
 		this.origin = this.self.position;
+		this.current = this.origin;
 		this.rb2d = GetComponent<Rigidbody2D>();
+
+		this.updateTarget();
+		StartCoroutine(this.toTarget());
+		StartCoroutine(this.shake());
 	}
 
 	private void FixedUpdate()
 	{
-		// this.next = Vector3.Lerp(this.self.position, this.origin, 5 * Time.deltaTime); // - (last - this.self.position) * this.forceScale;
-		// this.next.z = -10;
-		// this.last = this.self.position;
-		// this.self.position = this.next;
-
-		this.rb2d.velocity = Vector2.Lerp(this.rb2d.velocity, (Vector2)(this.origin - this.self.position) * (this.forceScale), 5 * Time.deltaTime); // * Mathf.Min(3, (this.origin - this.self.position).magnitude) / 3);
-		// for(int i=0 ; i<this.forceList.Count ; i++)
-		// {
-		// 	this.rb2d.velocity += this.forceList[i];
-		// }
-		// this.forceList.Clear();
+		this.self.position = Vector3.Lerp(this.self.position, this.current, 5 * Time.deltaTime);
+		// Debug.Log($"target: {this.target}");
+		// Debug.Log($"current: {this.current}");
 	}
 
 	public void addForce(Vector2 force)
 	{
-		// this.forceList.Add(force);
 		this.rb2d.velocity += force;
 		Debug.Log(this.rb2d.velocity);
+	}
+
+	private IEnumerator shake()
+	{
+		while(true)
+		{
+			this.rb2d.velocity = Vector2.Lerp(this.rb2d.velocity, (Vector2)(this.current - this.self.position) * (this.forceScale), 5 * Time.deltaTime);
+			yield return null;
+		}
+	}
+
+	private IEnumerator toTarget()
+	{
+		while(true)
+		{
+			Vector3 step = (this.target - this.current).normalized * this.speed;
+			// Debug.Log($"target: {this.target}");
+			// Debug.Log($"current: {this.current}");
+			// Debug.Log($"Step: {step}");
+
+			while(Vector3.Distance(this.target, this.current) > this.eps)
+			{
+				this.current += step * Time.deltaTime;
+
+				yield return null;
+			}
+
+			this.updateTarget();
+		}
+	}
+
+	private void updateTarget()
+	{
+		this.target = this.origin + (Vector3)Util.unitVec2() * Random.Range(this.radius / 2, this.radius);
+
+		while(Vector3.Distance(this.target, this.current) < eps)
+		{
+			this.target = this.origin + (Vector3)Util.unitVec2() * Random.Range(this.radius / 2, this.radius);
+		}
 	}
 }
