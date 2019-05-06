@@ -6,10 +6,9 @@ using UnityEngine.SceneManagement;
 
 public class GameStart : MonoBehaviour
 {
-	public AudioClip bgm;
-
 	private void Start()
 	{
-		GetComponent<Button>().onClick.AddListener(() => SceneManager.LoadScene("Main"));
+		GameObject.Find("ButtonStart").GetComponent<Button>().onClick.AddListener(() => SceneManager.LoadScene("Main"));
+		GameObject.Find("ButtonRepoLink").GetComponent<Button>().onClick.AddListener(() => Application.OpenURL("https://github.com/Bogay/click-the-same"));
 	}
 }
