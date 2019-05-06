@@ -6,6 +6,8 @@ using UnityEngine.SceneManagement;
 
 public class GameStart : MonoBehaviour
 {
+	public AudioClip bgm;
+
 	private void Start()
 	{
 		GetComponent<Button>().onClick.AddListener(() => SceneManager.LoadScene("Main"));
