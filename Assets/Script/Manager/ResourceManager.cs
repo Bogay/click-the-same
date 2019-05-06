@@ -7,24 +7,7 @@ using UnityEngine.UI;
 public class ResourceManager : MonoBehaviour
 {
 	// bad singleton
-	private static ResourceManager _instance;
-	public static ResourceManager instance
-	{
-		get
-		{
-			// if(!_instance)
-			// {
-			// 	_instance = FindObjectOfType<ResourceManager>();
-			// 	if(!_instance)
-			// 	{
-			// 		_instance = new GameObject("Resource Manager").AddComponent<ResourceManager>();
-			// 	}
-			// 	DontDestroyOnLoad(_instance);
-			// }
-
-			return _instance;
-		}
-	}
+	public static ResourceManager instance { get; private set; }
 
 	public GameObject textPrefab;
 	public GameObject mathBlockPrefab;
@@ -49,19 +32,13 @@ public class ResourceManager : MonoBehaviour
 	// Use this for initialization
 	void Start()
 	{
-		if(_instance && _instance != this)
+		if(instance && instance != this)
 		{
 			Destroy(this);
 			return;
 		}
 
-		_instance = this;
-
-		// preload
-		// this.textPrefab = Resources.Load<GameObject>("Text Root");
-		// this.mathBlockPrefab = Resources.Load<GameObject>("Block");
-		// this.bulletPrefab = Resources.Load<GameObject>("Bullet");
-
-		DontDestroyOnLoad(this);
+		instance = this;
+		DontDestroyOnLoad(gameObject);
 	}
 }
